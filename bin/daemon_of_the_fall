@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+options = { :workers => 1, :dir => Dir.pwd, :name => "daemon_of_the_fall" }
+
+parser = OptionParser.new do |opts|
+
+  opts.banner = "Usage: #{$0} [options] command"
+
+  opts.on("--[no-]daemonize", "Start process in background") do |bool|
+    options[:daemonize] = bool
+  end
+
+  opts.on("--workers NUM", Integer, "Amount of workers (default: 1)") do |workers|
+    options[:workers] = workers
+  end
+
+  opts.on("--pid FILE", "Location of pid file") do |pid|
+    options[:pid] = pid
+  end
+
+  opts.on("--dir DIR", "Directory where the app is to be located") do |dir|
+    options[:dir] = dir
+  end
+
+  opts.on("--name NAME", "Name of the server") do |name|
+    options[:name] = name
+  end
+
+end
+
+parser.parse!
+
+if ARGV.empty?
+  STDERR.puts "Missing command to run"
+  exit 1
+end
+
+unless options[:pid]
+  STDERR.puts "Missing option: --pid"
+  exit 1
+end
+
+if options[:daemonize]
+  Process.daemon
+end
+
+$LOAD_PATH.unshift(File.expand_path("../../lib", __FILE__))
+require 'daemon_of_the_fall'
+
+DaemonOfTheFall.spawn(ARGV, options)
