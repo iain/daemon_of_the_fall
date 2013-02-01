@@ -10,7 +10,7 @@ module DaemonOfTheFall
     def initialize(command, options)
       @command = command
       @options = options
-      $PROGRAM_NAME = "#{options[:name]} master"
+      update_program_name("booting")
     end
 
     def start
@@ -18,8 +18,20 @@ module DaemonOfTheFall
       at_exit { clean_pid_file }
       trap_signals
       start_workers
+      update_program_name
       wait_until_done
       puts "Stopped #{$PROGRAM_NAME} (pid: #{Process.pid})"
+    end
+
+    def restart
+      update_program_name("restarting")
+      pool.restart
+      update_program_name
+    end
+
+    def stop
+      update_program_name("shutting down")
+      pool.stop
     end
 
     private
@@ -53,9 +65,9 @@ module DaemonOfTheFall
     end
 
     def trap_signals
-      trap("USR2") { puts "USR2 received!"; pool.restart }
-      trap("TERM") { puts "TERM received!"; pool.stop }
-      trap("INT")  { puts "INT received!";  pool.stop }
+      trap("USR2") { puts "USR2 received!"; restart }
+      trap("TERM") { puts "TERM received!"; stop }
+      trap("INT")  { puts "INT received!";  stop }
     end
 
     def wait_until_done
@@ -85,6 +97,15 @@ module DaemonOfTheFall
     def pid_file
       File.join(root, options[:pid])
     end
+
+    def update_program_name(additional = nil)
+      if additional
+        $PROGRAM_NAME = "#{options[:name]} master (#{additional})"
+      else
+        $PROGRAM_NAME = "#{options[:name]} master"
+      end
+    end
+
 
   end
 end
