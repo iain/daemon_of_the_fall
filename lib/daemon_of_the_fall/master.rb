@@ -1,5 +1,6 @@
 require 'thread'
 require 'fileutils'
+
 Thread.abort_on_exception = true
 
 module DaemonOfTheFall
@@ -14,6 +15,7 @@ module DaemonOfTheFall
     end
 
     def start
+      Dir.chdir(root)
       write_pid
       at_exit { clean_pid_file }
       trap_signals
@@ -37,6 +39,7 @@ module DaemonOfTheFall
     private
 
     def write_pid
+      FileUtils.mkdir_p(File.dirname(pid_file))
       if File.exist?(pid_file)
         existing_pid = File.open(pid_file, 'r').read.chomp
         running = Process.getpgid(existing_pid) rescue false
@@ -95,7 +98,7 @@ module DaemonOfTheFall
     end
 
     def pid_file
-      File.join(root, options[:pid])
+      options[:pid]
     end
 
     def update_program_name(additional = nil)
