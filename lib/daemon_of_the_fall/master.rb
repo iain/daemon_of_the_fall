@@ -77,7 +77,17 @@ module DaemonOfTheFall
       trap("USR2") { puts "USR2 received!"; restart }
       trap("TERM") { puts "TERM received!"; stop }
       trap("INT")  { puts "INT received!";  stop }
-      trap("HUP")  { puts "HUP received!"; hup }
+      trap("HUP")  { puts "HUP received!";  hup }
+      trap("TTIN") { puts "TTIN received!"; ttin }
+      trap("TTOU") { puts "TTOU received!"; ttou }
+    end
+
+    def ttin
+      pool.increase
+    end
+
+    def ttou
+      pool.decrease
     end
 
     def wait_until_done

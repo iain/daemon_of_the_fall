@@ -40,6 +40,14 @@ module DaemonOfTheFall
       pids.count { |pid| running?(pid) }
     end
 
+    def increase
+      pids << start_worker(pids.size)
+    end
+
+    def decrease
+      stop_worker(pids.shift)
+    end
+
     private
 
     def start_worker(num)
