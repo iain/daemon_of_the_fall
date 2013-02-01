@@ -28,6 +28,13 @@ Example:
 
 See `daemon_of_the_fall --help` for a list of options.
 
+These are the signals daemon_of_the_fall responds to:
+
+* `TERM` shuts down all workers and then the master
+* `INT` does the same as `TERM`
+* `HUP` will be simply forwarded to each worker
+* `USR2` will restart each worker
+
 ## Testing
 
 Run `rake` to run the tests.

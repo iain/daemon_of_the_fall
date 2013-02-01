@@ -36,6 +36,12 @@ module DaemonOfTheFall
       pool.stop
     end
 
+    def hup
+      pool.pids.each do |pid|
+        Process.kill("HUP", pid)
+      end
+    end
+
     private
 
     def write_pid
@@ -71,6 +77,7 @@ module DaemonOfTheFall
       trap("USR2") { puts "USR2 received!"; restart }
       trap("TERM") { puts "TERM received!"; stop }
       trap("INT")  { puts "INT received!";  stop }
+      trap("HUP")  { puts "HUP received!"; hup }
     end
 
     def wait_until_done
