@@ -8,6 +8,7 @@ module DaemonOfTheFall
     def initialize(command, options)
       @command = command
       @options = options
+      @pids = []
     end
 
     def size
@@ -15,7 +16,9 @@ module DaemonOfTheFall
     end
 
     def start
-      @pids = size.times.map { |n| start_worker(n) }
+      until enough_workers?
+        increase
+      end
     end
 
     def restart
@@ -45,12 +48,28 @@ module DaemonOfTheFall
     end
 
     def decrease
-      stop_worker(pids.shift)
+      stop_worker(pids.pop)
+    end
+
+    def monitor
+      while index = missing_pid_index
+        puts "Missing pid #{pids[index]} for worker #{index}"
+        pids[index] = start_worker(index)
+      end
+    end
+
+    def enough_workers?
+      count >= size
+    end
+
+    def missing_pid_index
+      pids.index { |pid| not running?(pid) }
     end
 
     private
 
     def start_worker(num)
+      puts "Starting worker #{num}"
       pid = Process.spawn({"DAEMON_WORKER_NUMBER" => num.to_s}, *Array(command), {:chdir => options[:dir]})
       until running?(pid)
         sleep 0.1
@@ -59,6 +78,7 @@ module DaemonOfTheFall
     end
 
     def stop_worker(pid)
+      puts "Stopping worker #{pid}"
       Process.kill("TERM", pid)
       Process.waitpid(pid)
     end

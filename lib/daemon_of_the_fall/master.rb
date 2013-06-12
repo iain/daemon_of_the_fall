@@ -11,6 +11,7 @@ module DaemonOfTheFall
     def initialize(command, options)
       @command = command
       @options = options
+      @shutting_down = false
       update_program_name("booting")
     end
 
@@ -26,12 +27,16 @@ module DaemonOfTheFall
     end
 
     def restart
+      @monitor = false
       update_program_name("restarting")
       pool.restart
       update_program_name
+      @monitor = true
     end
 
     def stop
+      @shutting_down = true
+      @monitor = false
       update_program_name("shutting down")
       pool.stop
     end
@@ -67,6 +72,7 @@ module DaemonOfTheFall
 
     def start_workers
       pool.start
+      @monitor = true
     end
 
     def pool
@@ -91,7 +97,8 @@ module DaemonOfTheFall
     end
 
     def wait_until_done
-      until pool.empty?
+      while keep_running?
+        pool.monitor if @monitor
         sleep 0.1
       end
     end
@@ -116,6 +123,10 @@ module DaemonOfTheFall
 
     def pid_file
       options[:pid]
+    end
+
+    def keep_running?
+      not @shutting_down
     end
 
     def update_program_name(additional = nil)
