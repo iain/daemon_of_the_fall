@@ -1,3 +1,4 @@
+require 'daemon_of_the_fall/version'
 require 'thread'
 require 'fileutils'
 
@@ -12,6 +13,7 @@ module DaemonOfTheFall
       @command = command
       @options = options
       @shutting_down = false
+      @current_status = nil
       update_program_name("booting")
     end
 
@@ -21,24 +23,25 @@ module DaemonOfTheFall
       at_exit { clean_pid_file }
       trap_signals
       start_workers
-      update_program_name
+      update_program_name(nil)
       wait_until_done
+      update_program_name
       puts "Stopped #{$PROGRAM_NAME} (pid: #{Process.pid})"
     end
 
     def restart
       @monitor = false
       update_program_name("restarting")
-      pool.restart
-      update_program_name
+      pool.restart { update_program_name }
+      update_program_name(nil)
       @monitor = true
     end
 
     def stop
-      @shutting_down = true
       @monitor = false
       update_program_name("shutting down")
-      pool.stop
+      pool.stop { update_program_name }
+      @shutting_down = true
     end
 
     def hup
@@ -71,7 +74,7 @@ module DaemonOfTheFall
     end
 
     def start_workers
-      pool.start
+      pool.start { update_program_name }
       @monitor = true
     end
 
@@ -99,6 +102,7 @@ module DaemonOfTheFall
     def wait_until_done
       while keep_running?
         pool.monitor if @monitor
+        update_program_name
         sleep 0.1
       end
     end
@@ -129,12 +133,15 @@ module DaemonOfTheFall
       not @shutting_down
     end
 
-    def update_program_name(additional = nil)
-      if additional
-        $PROGRAM_NAME = "#{options[:name]} master (#{additional})"
+    def update_program_name(additional = :unchanged)
+      @current_status = additional unless additional == :unchanged
+      base = "#{options[:name]} master [version #{DaemonOfTheFall::VERSION}; #{pool.count}/#{pool.size} workers]"
+      if @current_status
+        $PROGRAM_NAME = "#{base} (#{additional})"
       else
-        $PROGRAM_NAME = "#{options[:name]} master"
+        $PROGRAM_NAME = base
       end
+      $PROGRAM_NAME
     end
 
 

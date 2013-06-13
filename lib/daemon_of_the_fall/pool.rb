@@ -18,6 +18,7 @@ module DaemonOfTheFall
     def start
       until enough_workers?
         increase
+        yield if block_given?
       end
     end
 
@@ -26,12 +27,14 @@ module DaemonOfTheFall
         stop_worker(pid)
         new_pid = start_worker(index)
         pids[index] = new_pid
+        yield if block_given?
       end
     end
 
     def stop
       pids.each do |pid|
         stop_worker(pid)
+        yield if block_given?
       end
     end
 
