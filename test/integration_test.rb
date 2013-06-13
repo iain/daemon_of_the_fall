@@ -61,7 +61,7 @@ class TestIntegration < MiniTest::Unit::TestCase
     at_exit {
       spawned_commands.each { |pid| Process.kill("TERM", pid) }
     }
-    # FileUtils.mkdir_p("log")
+    FileUtils.mkdir_p("log")
     cmd = "./bin/daemon_of_the_fall #{command} --log log/test.log"
     puts "Running: #{cmd}"
     pid = spawn(cmd)

@@ -90,7 +90,7 @@ module DaemonOfTheFall
     end
 
     def running?(pid)
-      Process.getpgid(pid) rescue false
+      !Process.waitpid(pid, Process::WNOHANG) rescue false
     end
 
   end
