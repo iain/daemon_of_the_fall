@@ -1,11 +1,13 @@
 require 'daemon_of_the_fall/version'
 require 'thread'
 require 'fileutils'
+require 'daemon_of_the_fall/logging'
 
 Thread.abort_on_exception = true
 
 module DaemonOfTheFall
   class Master
+    include Logging
 
     attr_reader :command, :options
 
@@ -143,7 +145,6 @@ module DaemonOfTheFall
       end
       $PROGRAM_NAME
     end
-
 
   end
 end

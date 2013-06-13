@@ -1,5 +1,8 @@
+require 'daemon_of_the_fall/logging'
+
 module DaemonOfTheFall
   class Pool
+    include Logging
 
     attr_reader :command, :options
 
